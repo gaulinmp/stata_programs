@@ -9,14 +9,16 @@ program wsum, rclass
             stat_format(string asis) ///
             count_format(string asis) ///
             * ]
-	
+
     *** This formats the inputs and sets up local variables.
-    tokenize `varlist'
-	
+    tokenize varlist
+    fvunab varlist: `varlist'
+    local varlist: list uniq varlist
+
 	if "`sort'" != "" local varlist: list sort varlist
 
 	local max_str_len = 1
-	foreach v in `varlist' {
+	foreach v of local varlist {
 		local i_str_len = strlen("`v'")
 		if `i_str_len' > `max_str_len' local max_str_len `i_str_len'
 	}
@@ -34,6 +36,6 @@ program wsum, rclass
 		collabels("Obs"            "Mean"            "Median"         "Std. Dev"      "Min"            "Max",) ///
 		cells("count`count_format' mean`stat_format' p50`stat_format' sd`stat_format' min`stat_format' max`stat_format' ") ///
 		`options'
-	
+
 end
 // end wsum program
