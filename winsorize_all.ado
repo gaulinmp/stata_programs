@@ -7,8 +7,11 @@ program winsorize_all, rclass
   if "`compress'" == "" compress
 
   local varlist: list uniq varlist
-  fvunab force: `force'
-  local force: list uniq force
+
+  if `"`force'"' != `""' {
+    fvunab force: `force'
+    local force: list uniq force
+  }
 
   if `"`if'"' == `""' local if if 1
 
