@@ -26,9 +26,6 @@ program wsum, rclass
 
     if `"`statslabels'"' == `""' local statslabels `"`stats'"'
 
-	quietly ///
-	estpost summarize `varlist' `if' `in', detail
-
 	if "`stat_format'"=="" local stat_format "(fmt(%12.3gc))"
 	else local stat_format "(fmt(`stat_format'))"
 	if "`count_format'"=="" local count_format "(fmt(%12.0gc))"
@@ -44,6 +41,13 @@ program wsum, rclass
     else {
         local cols `"collabels("Obs"  "Mean"  "Std. Dev" Min  1%     10%     25%     Median  75%     90%     99%     Max ,) "'
         local cols `"`cols' cells("count`cf' mean`sf' sd`sf' min`sf' p1`sf' p10`sf' p25`sf' p50`sf' p75`sf' p90`sf' p99`sf' max`sf' ") "'
+    }
+
+    /* Run summary stats. If there are factor variables, add xi: */
+	capture ///
+	estpost summarize `varlist' `if' `in', detail
+	if _rc {
+	    capture xi, prefix(i_): estpost summarize `varlist' `if' `in', detail
     }
 
 	esttab . , varwidth(`max_str_len') ///
