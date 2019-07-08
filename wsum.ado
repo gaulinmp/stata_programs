@@ -4,8 +4,9 @@
 capture program drop wsum
 program wsum, rclass
 	version 12
-    syntax varlist(min=1 fv ts) [if] [in], ///
+    syntax varlist(min=1 fv ts) [using] [if] [in], ///
             [ sort ///
+            Detail ///
             stat_format(string asis) ///
             count_format(string asis) ///
             * ]
@@ -23,6 +24,8 @@ program wsum, rclass
 		if `i_str_len' > `max_str_len' local max_str_len `i_str_len'
 	}
 
+    if `"`statslabels'"' == `""' local statslabels `"`stats'"'
+
 	quietly ///
 	estpost summarize `varlist' `if' `in', detail
 
@@ -31,11 +34,26 @@ program wsum, rclass
 	if "`count_format'"=="" local count_format "(fmt(%12.0gc))"
 	else local count_format "(fmt(`count_format'))"
 
-	esttab ., varwidth(`max_str_len') ///
+    local sf `"`stat_format'"'
+    local cf `"`count_format'"'
+
+    if "`detail'" == "" {
+        local cols `"collabels("Obs"  "Mean"  "Std. Dev" Min  25%     Median  75%     Max ,) "'
+        local cols `"`cols' cells("count`cf' mean`sf' sd`sf' min`sf' p25`sf' p50`sf' p75`sf' max`sf' ") "'
+    }
+    else {
+        local cols `"collabels("Obs"  "Mean"  "Std. Dev" Min  1%     10%     25%     Median  75%     90%     99%     Max ,) "'
+        local cols `"`cols' cells("count`cf' mean`sf' sd`sf' min`sf' p1`sf' p10`sf' p25`sf' p50`sf' p75`sf' p90`sf' p99`sf' max`sf' ") "'
+    }
+
+	esttab . , varwidth(`max_str_len') ///
 		noobs nomtitles nonote nonumber ///
-		collabels("Obs"            "Mean"            "Median"         "Std. Dev"      "Min"            "Max",) ///
-		cells("count`count_format' mean`stat_format' p50`stat_format' sd`stat_format' min`stat_format' max`stat_format' ") ///
-		`options'
+		`cols' `options'
+
+    if `"`using'"' != `""' ///
+	esttab . `using', varwidth(`max_str_len') ///
+		noobs nomtitles nonote nonumber ///
+		`cols' `options'
 
 end
 // end wsum program
