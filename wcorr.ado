@@ -3,7 +3,7 @@
 // wcorr program
 capture program drop wcorr
 program wcorr, rclass
-	version 12
+    version 12
     syntax varlist(min=1 max=99 fv ts) [using] [if] [in], ///
             [ /// // options
             sort /// // Sort variables by name
@@ -21,11 +21,11 @@ program wcorr, rclass
     fvunab varlist: `varlist'
     local varlist: list uniq varlist
 
-	if "`sort'" != "" local varlist: list sort varlist
+    if "`sort'" != "" local varlist: list sort varlist
 
     if `"`statslabels'"' == `""' local statslabels `"`stats'"'
 
-	if `"`format'"'==`""' {
+    if `"`format'"'==`""' {
         local format "%-5.2f"
         local sub `" 1.00 " 1 " "'
         local mwidth
@@ -33,44 +33,59 @@ program wcorr, rclass
 
     local nvars :  word count `varlist'
 
-	local max_str_len = 1
-	foreach v of local varlist {
-		local i_str_len = strlen("`v'")
-		if `i_str_len' > `max_str_len' local max_str_len `i_str_len'
-	}
-    /* Now add the "(N) " length to max_str_len */
-    local max_str_len=`max_str_len' + 4
-    if `nvars' >  9 local max_str_len=`max_str_len' + 1
-
     /*
     Add variables to list for re-labeling with (i) in front.
     If Spearman is requested, calculate temp vars which are the rank(var),
     because the correlation of ranks == Spearman.
     */
     local i=0
+    local max_str_len = 1
     local eql
     if `nvars' > 9 local space " "
     foreach v in `varlist' {
         local i = `i'+1
+        /* Check if variable is valid */
+        tempvar var_`i'
+        if "`spearman'" != "" {
+            capture egen `var_`i'' = rank(`v'), unique
+        }
+        else {
+            capture gen `var_`i'' = `v'
+        }
+        /* If _rc != 0, then we hit an error in the variable
+        (probably a factor variable), so ignore it */
+        if _rc {
+            local i = `i'-1
+            continue
+        }
 
+        /* If we're greater than 9, drop the added space in front of ( i) */
         if `i' > 9 local space ""
 
-        /* Add (i) to the equation label string */
+        /* Make new varlist with temp-variable names in it */
+        local newvarlist `" `newvarlist' `var_`i'' "'
+
+        /* Label those tem variables in estout below, using:
+        "tempvarname" "(i) oldvarname" */
+        local varlab `"`varlab' "`var_`i''" "(`space'`i') `v'" "'
+
+        /* Add (i) to the equation label string along the top of the table */
         local eql `"`eql' "(`i')" "'
 
-        if "`spearman'" != "" {
-            tempvar `v'`i'
-            quietly egen ``v'`i'' = rank(`v'), unique
-            local newvarlist `" `newvarlist' ``v'`i'' "'
-            local varlab `"`varlab' "``v'`i''" "(`space'`i') `v'" "'
-        }
-        else local varlab `"`varlab' "`v'" "(`space'`i') `v'" "'
+        /* Track the length of the longest label (and add 4 below) */
+        local i_str_len = strlen("`v'")
+        if `i_str_len' > `max_str_len' local max_str_len `i_str_len'
     }
-    if "`spearman'" != "" local varlist `"`newvarlist'"'
+
+    /* Now add the "(N) " length to max_str_len */
+    local max_str_len=`max_str_len' + 4
+    if `nvars' >  9 local max_str_len=`max_str_len' + 1
+
 
 
     /* Run correlation matrix */
-    quietly estpost correlate `varlist' `if' `in', matrix listwise
+    capture estpost correlate `newvarlist' `if' `in', matrix listwise
+    if _rc xi: estpost correlate `newvarlist' `if' `in', matrix listwise
 
     /* Output results */
     `noisily' display `"esttab, unstack not nonumbers nomtitle noobs compress /// "'
