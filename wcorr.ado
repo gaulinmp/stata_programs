@@ -47,7 +47,8 @@ program wcorr, rclass
         /* Check if variable is valid */
         tempvar var_`i'
         if "`spearman'" != "" {
-            capture egen `var_`i'' = rank(`v'), unique
+            // Stata's spearman leaves ties as the mean value. Mimic that.
+            capture egen `var_`i'' = rank(`v')
         }
         else {
             capture gen `var_`i'' = `v'
