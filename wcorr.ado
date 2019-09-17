@@ -99,7 +99,7 @@ program wcorr, rclass
     `noisily' display `"        modelwidth(`modelwidth') /// "'
     `noisily' display `"        varlabels(`varlab') `options' "'
 
-    esttab, unstack not nonumbers nomtitle noobs compress ///
+    esttab ., unstack not nonumbers nomtitle noobs compress ///
             cells(b(fmt(`format') star)) ///
             star(* 0.01) ///
             eqlabels(`eql') ///
