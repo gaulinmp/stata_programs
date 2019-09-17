@@ -10,6 +10,7 @@ program wcorr, rclass
             spearman /// // Display spearman correlations
             format(string asis) /// // Format for stats in table
             modelwidth(int 6) /// // Width of the models in STATA output
+            label /// // Use variable labels or variable names?
             debug /// // output debug information
             * ]
 
@@ -41,13 +42,13 @@ program wcorr, rclass
     local i=0
     local max_str_len = 1
     local eql
+    /* This only allows for a maximum of 99 variables. Which is sane. */
     if `nvars' > 9 local space " "
     foreach v in `varlist' {
         local i = `i'+1
         /* Check if variable is valid */
         tempvar var_`i'
         if "`spearman'" != "" {
-            // Stata's spearman leaves ties as the mean value. Mimic that.
             capture egen `var_`i'' = rank(`v')
         }
         else {
@@ -68,19 +69,20 @@ program wcorr, rclass
 
         /* Label those tem variables in estout below, using:
         "tempvarname" "(i) oldvarname" */
-        local varlab `"`varlab' "`var_`i''" "(`space'`i') `v'" "'
+        if "`label'" != "" ///
+            local lab: variable label `v'
+        if ("`label'" == "") | ("`lab'" == "") ///
+            local lab "`v'"
+        local full_lab "(`space'`i') `lab'"
+        local varlab `"`varlab' "`var_`i''" "`full_lab'" "'
 
         /* Add (i) to the equation label string along the top of the table */
         local eql `"`eql' "(`i')" "'
 
         /* Track the length of the longest label (and add 4 below) */
-        local i_str_len = strlen("`v'")
+        local i_str_len = strlen("`full_lab'")
         if `i_str_len' > `max_str_len' local max_str_len `i_str_len'
     }
-
-    /* Now add the "(N) " length to max_str_len */
-    local max_str_len=`max_str_len' + 4
-    if `nvars' >  9 local max_str_len=`max_str_len' + 1
 
 
 
@@ -96,7 +98,9 @@ program wcorr, rclass
     `noisily' display `"        collabels(none) /// "'
     `noisily' display `"        varwidth(`max_str_len') /// "'
     `noisily' display `"        modelwidth(`modelwidth') /// "'
-    `noisily' display `"        substitute(`sub') "'
+    `noisily' display `"        width(100%) /// "'
+    `noisily' display `"        varlabels(`varlab') /// "'
+    `noisily' display `"        substitute(`sub') `options' "'
 
     esttab, unstack not nonumbers nomtitle noobs compress ///
             cells(b(fmt(`format') star)) ///
@@ -105,18 +109,20 @@ program wcorr, rclass
             collabels(none) ///
             varwidth(`max_str_len') ///
             modelwidth(`modelwidth') ///
+            width(100%) ///
             varlabels(`varlab') ///
             substitute(`sub') `options'
 
     if `"`using'"' != `""' ///
     esttab . `using', ///
-            unstack label not nonumbers nomtitle noobs compress nogaps ///
+            unstack not nonumbers nomtitle noobs compress nogaps ///
             cells(b(fmt(`format') star)) ///
             star(* 0.01) ///
             eqlabels(`eql') ///
             collabels(none) ///
             varwidth(`max_str_len') ///
             modelwidth(`modelwidth') ///
+            width(100%) ///
             varlabels(`varlab') ///
             substitute(`sub') `options'
 
