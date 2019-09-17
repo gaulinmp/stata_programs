@@ -28,7 +28,6 @@ program wcorr, rclass
 
     if `"`format'"'==`""' {
         local format "%-5.2f"
-        local sub `" 1.00 " 1 " "'
         local mwidth
     }
 
@@ -98,9 +97,7 @@ program wcorr, rclass
     `noisily' display `"        collabels(none) /// "'
     `noisily' display `"        varwidth(`max_str_len') /// "'
     `noisily' display `"        modelwidth(`modelwidth') /// "'
-    `noisily' display `"        width(100%) /// "'
-    `noisily' display `"        varlabels(`varlab') /// "'
-    `noisily' display `"        substitute(`sub') `options' "'
+    `noisily' display `"        varlabels(`varlab') `options' "'
 
     esttab, unstack not nonumbers nomtitle noobs compress ///
             cells(b(fmt(`format') star)) ///
@@ -109,9 +106,7 @@ program wcorr, rclass
             collabels(none) ///
             varwidth(`max_str_len') ///
             modelwidth(`modelwidth') ///
-            width(100%) ///
-            varlabels(`varlab') ///
-            substitute(`sub') `options'
+            varlabels(`varlab') `options'
 
     if `"`using'"' != `""' ///
     esttab . `using', ///
@@ -122,9 +117,7 @@ program wcorr, rclass
             collabels(none) ///
             varwidth(`max_str_len') ///
             modelwidth(`modelwidth') ///
-            width(100%) ///
-            varlabels(`varlab') ///
-            substitute(`sub') `options'
+            varlabels(`varlab') `options'
 
 end
 // end wcorr program
