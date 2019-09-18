@@ -1,4 +1,4 @@
-// Program to estimate 'Fixed Effect' probit
+// Program to estimate Correlated Random Effects Probit
 
 capture program drop creprobit
 
