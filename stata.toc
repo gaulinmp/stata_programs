@@ -1,0 +1,8 @@
+v 0.1.0
+d Mac's Stata Code
+d gaulinmp@gmail.com
+d https://github.com/gaulinmp/stata_programs
+
+d 'gaulinmp': Random stata programs.
+
+p gaulinmp
