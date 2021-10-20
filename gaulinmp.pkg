@@ -1,0 +1,13 @@
+v 0.1.0
+d 'gaulinmp': Mac's stata programs
+d
+d Mac's stata programs
+d
+d Distribution-Date:   20211020
+d License: MIT
+d
+F creprobit.ado
+F summary_stats.ado
+F wcorr.ado
+F winsorize_all.ado
+F wsum.ado
