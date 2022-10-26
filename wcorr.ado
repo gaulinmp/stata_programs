@@ -14,6 +14,12 @@ program wcorr, rclass
             debug /// // output debug information
             * ]
 
+    quietly count `if'
+    if r(N) == 0 {
+        display "No observations found!"
+        exit
+    }
+
     local noisily quietly
     if "`debug'" != "" local noisily noisily
 

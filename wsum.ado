@@ -3,7 +3,7 @@
 // wsum program
 capture program drop wsum
 program wsum, rclass
-	version 12
+    version 12
     syntax varlist(min=1 fv ts) [using] [if] [in], ///
             [ sort ///
             Detail ///
@@ -16,20 +16,26 @@ program wsum, rclass
     fvunab varlist: `varlist'
     local varlist: list uniq varlist
 
-	if "`sort'" != "" local varlist: list sort varlist
+    quietly count `if'
+    if r(N) == 0 {
+        display "No observations found!"
+        exit
+    }
 
-	local max_str_len = 1
-	foreach v of local varlist {
-		local i_str_len = strlen("`v'")
-		if `i_str_len' > `max_str_len' local max_str_len `i_str_len'
-	}
+    if "`sort'" != "" local varlist: list sort varlist
+
+    local max_str_len = 1
+    foreach v of local varlist {
+        local i_str_len = strlen("`v'")
+        if `i_str_len' > `max_str_len' local max_str_len `i_str_len'
+    }
 
     if `"`statslabels'"' == `""' local statslabels `"`stats'"'
 
-	if "`stat_format'"=="" local stat_format "(fmt(%12.3gc))"
-	else local stat_format "(fmt(`stat_format'))"
-	if "`count_format'"=="" local count_format "(fmt(%12.0gc))"
-	else local count_format "(fmt(`count_format'))"
+    if "`stat_format'"=="" local stat_format "(fmt(%12.3gc))"
+    else local stat_format "(fmt(`stat_format'))"
+    if "`count_format'"=="" local count_format "(fmt(%12.0gc))"
+    else local count_format "(fmt(`count_format'))"
 
     local sf `"`stat_format'"'
     local cf `"`count_format'"'
@@ -44,20 +50,20 @@ program wsum, rclass
     }
 
     /* Run summary stats. If there are factor variables, add xi: */
-	capture ///
-	estpost summarize `varlist' `if' `in', detail
-	if _rc {
-	    capture xi, prefix(i_): estpost summarize `varlist' `if' `in', detail
+    capture ///
+    estpost summarize `varlist' `if' `in', detail
+    if _rc {
+        capture xi, prefix(i_): estpost summarize `varlist' `if' `in', detail
     }
 
-	esttab . , varwidth(`max_str_len') ///
-		noobs nomtitles nonote nonumber ///
-		`cols' `options'
+    esttab . , varwidth(`max_str_len') ///
+        noobs nomtitles nonote nonumber ///
+        `cols' `options'
 
     if `"`using'"' != `""' ///
-	esttab . `using', varwidth(`max_str_len') ///
-		noobs nomtitles nonote nonumber ///
-		`cols' `options'
+    esttab . `using', varwidth(`max_str_len') ///
+        noobs nomtitles nonote nonumber ///
+        `cols' `options'
 
 end
 // end wsum program
